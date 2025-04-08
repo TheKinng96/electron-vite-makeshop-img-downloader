@@ -20,7 +20,7 @@ export function showProcessScreen() {
   progressStatusText.textContent = 'Download starting...';
 
   // Set up progress listener
-  window.electronAPI.onDownloadProgress((event: any, data: any) => {
+  window.electronAPI.onDownloadProgress((_event: any, data: any) => {
     const { progress, current, total, stage, message } = data;
 
     if (stage === 'checking') {
@@ -42,7 +42,7 @@ export function showProcessScreen() {
   });
 
   // Set up completion listener
-  window.electronAPI.onDownloadComplete((event: any, status: any) => {
+  window.electronAPI.onDownloadComplete((_event: any, status: any) => {
     if (status.success) {
       progressStatusText.textContent = 'Download completed!';
       downloadProgressBar.value = 100;

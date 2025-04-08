@@ -238,7 +238,7 @@ app.whenReady().then(() => {
   });
 
   // New handler for creating domain folders
-  ipcMain.handle('create-domain-folder', async (event, params: { storagePath: string; domainName: string }): Promise<string> => {
+  ipcMain.handle('create-domain-folder', async (_event, params: { storagePath: string; domainName: string }): Promise<string> => {
     try {
       return await createDomainFolder(params.storagePath, params.domainName);
     } catch (error) {
@@ -248,7 +248,7 @@ app.whenReady().then(() => {
   });
 
   // Handle single image download
-  ipcMain.handle('download-single-image', async (event, params: SingleImageParams): Promise<{ success: boolean; message: string }> => {
+  ipcMain.handle('download-single-image', async (_event, params: SingleImageParams): Promise<{ success: boolean; message: string }> => {
     const { domainFolderPath, imageUrl } = params;
 
     let browser: Browser | null = null;
@@ -273,7 +273,7 @@ app.whenReady().then(() => {
   });
 
   // Handle image checking process
-  ipcMain.handle('check-images', async (event, params: DownloadParams): Promise<{ success: boolean; message: string; imageUrls: ImageUrl[] }> => {
+  ipcMain.handle('check-images', async (_event, params: DownloadParams): Promise<{ success: boolean; message: string; imageUrls: ImageUrl[] }> => {
     // Reset cancellation flag at the start of a new download
     isDownloadCancelled = false;
 
