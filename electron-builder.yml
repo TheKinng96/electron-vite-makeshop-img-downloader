@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: makeshop-v2
+appId: com.makeshop-image-downloader.corekara
+productName: Makeshop画像ダウンローダー
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: makeshop-v2
+  executableName: Makeshop画像ダウンローダー
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -33,7 +33,7 @@ linux:
     - AppImage
     - snap
     - deb
-  maintainer: electronjs.org
+  maintainer: yap@corekara.co.jp
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
