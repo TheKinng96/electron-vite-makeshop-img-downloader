@@ -1,10 +1,9 @@
 import { showStatus } from './statusUtils';
 import { showProcessScreen, hideProcessScreen } from './processScreen';
 import Papa from 'papaparse';
-import { ImageUrl } from '../types';
+import { ImageUrl } from './types';
 
 // Get Setup Screen Elements
-const setupScreenDiv = document.getElementById('setupScreen') as HTMLDivElement;
 const csvFileInput = document.getElementById('csvFile') as HTMLInputElement;
 const productIdFieldContainer = document.getElementById('productIdFieldContainer') as HTMLDivElement;
 const productIdField = document.getElementById('productIdField') as HTMLSelectElement;
@@ -13,22 +12,23 @@ const browseButton = document.getElementById('browseButton') as HTMLButtonElemen
 const shopDomainInput = document.getElementById('shopDomain') as HTMLInputElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const statusDiv = document.getElementById('status') as HTMLDivElement;
-const generalStatusDiv = document.getElementById('generalStatus') as HTMLDivElement;
 
 async function setDefaultStoragePath() {
-  const defaultPath = await (window as any).electronAPI.getDefaultFolder();
+  const defaultPath = await window.electronAPI.getDefaultFolder();
 
   if (storagePathInput) {
     storagePathInput.value = defaultPath;
   }
 
   // When the "Browse" button is clicked, open the folder picker
-  document.getElementById('browseButton').addEventListener('click', async () => {
-    const folderPath = await (window as any).electronAPI.selectFolder();
-    if (folderPath && storagePathInput) {
-      storagePathInput.value = folderPath;
-    }
-  });
+  if (browseButton) {
+    browseButton.addEventListener('click', async () => {
+      const folderPath = await (window as any).electronAPI.selectFolder();
+      if (folderPath && storagePathInput) {
+        storagePathInput.value = folderPath;
+      }
+    });
+  }
 }
 
 setDefaultStoragePath();
@@ -242,7 +242,7 @@ async function downloadImagesInParallel(
   });
 
   // Wait for all downloads to complete or until cancelled
-  const results = await Promise.all(downloadPromises);
+  await Promise.all(downloadPromises);
 
   return { successCount, failureCount, cancelled };
 }
