@@ -1,8 +1,8 @@
 <!doctype html>
-<html>
+<html data-theme="emerald">
   <head>
     <meta charset="UTF-8" />
-    <title>Electron</title>
+    <title>Makeshop画像ダウンローダー</title>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
@@ -12,31 +12,60 @@
     <link href="./assets/main.css" type="text/css" rel="stylesheet" />
   </head>
 
-  <body>
-    <div id="app">
-      <img alt="logo" class="logo" src="./assets/electron.svg" />
-      <div class="creator">Powered by electron-vite</div>
-      <div class="text">
-        Build an Electron app with
-        <span class="ts">TypeScript</span>
-      </div>
-      <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
-      <div class="actions">
-        <div class="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
+  <body class="min-h-screen p-4 bg-base-200">
+    <div class="card max-w-3xl mx-auto bg-base-100 p-4 shadow-xl">
+      <h1 class="text-3xl font-bold mb-6">Makeshop画像ダウンローダー</h1>
+
+      <!-- Setup Screen -->
+      <div id="setupScreen">
+        <div class="mb-4">
+          <label for="csvFile" class="block text-sm font-medium mb-1">CSVをインポート</label>
+          <input type="file" id="csvFile" accept=".csv" class="file-input file-input-bordered w-full" />
         </div>
-        <div class="action">
-          <a id="ipcHandler" target="_blank" rel="noreferrer">Send IPC</a>
+
+        <div id="productIdFieldContainer" class="mb-4 hidden">
+          <label for="productIdField" class="block text-sm font-medium mb-1">商品IDフィールド</label>
+          <select id="productIdField" class="select select-bordered w-full" disabled>
+            <option value="">選択してください</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label for="storagePath" class="block text-sm font-medium mb-1">保存先</label>
+          <div class="flex gap-2">
+            <input type="text" id="storagePath" readonly class="input input-bordered flex-1 bg-base-200" />
+            <button id="browseButton" class="btn">ブラウズ</button>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="shopDomain" class="block text-sm font-medium mb-1">例の商品URL </label>
+          <input
+            type="text"
+            id="shopDomain"
+            placeholder="e.g., https://adsist.shop/view/item/000000000003"
+            class="input input-bordered w-full"
+          />
+        </div>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <!-- Note: Original Cancel button removed as per request -->
+          <button id="startButton" class="btn btn-primary">ダウンロード開始</button>
         </div>
       </div>
 
-      <ul class="versions">
-        <li class="electron-version"></li>
-        <li class="chrome-version"></li>
-        <li class="node-version"></li>
-      </ul>
+      <!-- Process Screen (Initially Hidden) -->
+      <div id="processScreen" class="hidden">
+        <div id="progressStatusText" class="mb-2 text-center">ダウンロード中...</div>
+        <progress id="downloadProgressBar" class="progress progress-primary w-full mb-4" value="0" max="100"></progress>
+        <div class="flex justify-end">
+          <button id="cancelProcessButton" class="btn btn-error">キャンセル</button>
+        </div>
+      </div>
+
+      <!-- General Status Area (for setup errors, success messages) -->
+      <div id="status" class="mt-4 hidden"></div>
     </div>
-
     <script type="module" src="./src/renderer.ts"></script>
   </body>
 </html>
