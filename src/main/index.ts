@@ -2,13 +2,18 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import * as fs from 'fs/promises';
-import puppeteer, { Browser } from 'puppeteer';
+import { Browser } from 'puppeteer';
 import { DownloadParams, ImageUrl, SingleImageParams } from '../renderer/src/types';
+import { BrowserManager } from './services/browser';
+import { createPage, navigateToUrl } from './services/browser/puppeteerUtils';
 
 let mainWindow: BrowserWindow | null = null;
 
 // Add a cancellation flag at the top of the file
 let isDownloadCancelled = false;
+
+// Initialize the browser manager
+const browserManager = BrowserManager.getInstance();
 
 // Helper function to check if a file exists
 async function fileExists(filePath: string): Promise<boolean> {
@@ -26,12 +31,12 @@ async function checkProductImages(
   url: string,
   productId: string
 ): Promise<ImageUrl[]> {
-  const page = await browser.newPage();
+  const page = await createPage(browser);
   const imageUrls: ImageUrl[] = [];
 
   try {
     console.log('Checking images for:', url);
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    await navigateToUrl(page, url);
 
     // Find product images - check for makeshop-multi-images.akamaized.net domain
     const imgSelector = 'img[src*="makeshop-multi-images.akamaized.net"]';
@@ -90,7 +95,8 @@ async function checkProductImages(
 async function downloadImage(
   browser: Browser,
   imageUrl: ImageUrl,
-  domainFolderPath: string
+  domainFolderPath: string,
+  params?: { fromSetupScreen?: boolean }
 ): Promise<boolean> {
   // Check if download has been cancelled
   if (isDownloadCancelled) {
@@ -99,7 +105,7 @@ async function downloadImage(
   }
 
   const { url, productId, suffix } = imageUrl;
-  let page = await browser.newPage();
+  let page = await createPage(browser);
 
   try {
     // Create product-specific subfolder
@@ -125,7 +131,7 @@ async function downloadImage(
     }
 
     // Download the image
-    const response = await page.goto(url, { waitUntil: 'networkidle0' });
+    const response = await navigateToUrl(page, url);
     if (!response) {
       console.warn(`Failed to fetch image: ${url}`);
       return false;
@@ -146,6 +152,16 @@ async function downloadImage(
     // Save the image
     await fs.writeFile(filePath, buffer);
     console.log(`Successfully downloaded image for product ${productId} to ${filePath}`);
+
+    // Send notification about single image download completion
+    // This notification will be handled by processScreen.ts
+    // The setupScreen.ts already handles its own progress updates
+    if (mainWindow && !params?.fromSetupScreen) {
+      mainWindow.webContents.send('download-progress', {
+        stage: 'single-downloading',
+        message: `画像のダウンロード中...`
+      });
+    }
 
     return true;
   } catch (error) {
@@ -250,12 +266,9 @@ app.whenReady().then(() => {
 
     let browser: Browser | null = null;
     try {
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
+      browser = await browserManager.acquireBrowser();
 
-      const success = await downloadImage(browser, imageUrl, domainFolderPath);
+      const success = await downloadImage(browser, imageUrl, domainFolderPath, { fromSetupScreen: true });
       return {
         success,
         message: success
@@ -264,7 +277,7 @@ app.whenReady().then(() => {
       };
     } finally {
       if (browser) {
-        await browser.close();
+        browserManager.releaseBrowser(browser);
       }
     }
   });
@@ -319,10 +332,7 @@ app.whenReady().then(() => {
     try {
       // Launch multiple browsers
       for (let i = 0; i < CONCURRENT_BROWSERS; i++) {
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+        const browser = await browserManager.acquireBrowser();
         browsers.push(browser);
       }
 
@@ -398,7 +408,9 @@ app.whenReady().then(() => {
 
     } finally {
       // Clean up all browsers
-      await Promise.all(browsers.map(browser => browser.close().catch(console.error)));
+      for (const browser of browsers) {
+        browserManager.releaseBrowser(browser);
+      }
     }
   });
 
