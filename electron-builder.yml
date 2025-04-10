@@ -1,5 +1,5 @@
 appId: com.makeshop-image-downloader.corekara
-productName: Makeshop画像ダウンローダー
+productName: Makeshop-Image-Downloader
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: Makeshop画像ダウンローダー
+  executableName: Makeshop-Image-Downloader
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
